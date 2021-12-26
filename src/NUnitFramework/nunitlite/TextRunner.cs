@@ -339,6 +339,9 @@ namespace NUnitLite
                 runSettings[FrameworkPackageSettings.LOAD] = prefilters;
             }
 
+            if (options.RunOnMainThread)
+                runSettings[FrameworkPackageSettings.RunOnMainThread] = options.RunOnMainThread;
+
             if (options.NumberOfTestWorkers >= 0)
                 runSettings[FrameworkPackageSettings.NumberOfTestWorkers] = options.NumberOfTestWorkers;
 

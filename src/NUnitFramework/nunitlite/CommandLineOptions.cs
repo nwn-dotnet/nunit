@@ -186,6 +186,7 @@ namespace NUnit.Common
 
         public int NumberOfTestWorkers { get; private set; } = -1;
         public bool NumberOfTestWorkersSpecified { get { return NumberOfTestWorkers >= 0; } }
+        public bool RunOnMainThread { get; private set; } = false;
 
         public bool StopOnError { get; private set; }
 
@@ -389,6 +390,9 @@ namespace NUnit.Common
 
             this.Add("workers=", "Specify the {NUMBER} of worker threads to be used in running tests. If not specified, defaults to 2 or the number of processors, whichever is greater.",
                 v => NumberOfTestWorkers = RequiredInt(v, "--workers"));
+
+            this.Add("mainthread", "Tests should run on the same thread as the NUnit runner itself.",
+                v => RunOnMainThread = v != null);
 
             this.Add("stoponerror", "Stop run immediately upon any test failure or error.",
                 v => StopOnError = v != null);
