@@ -22,6 +22,8 @@
 // ***********************************************************************
 
 using System;
+using System.Reflection;
+using System.Threading.Tasks;
 using NUnit.Framework.Interfaces;
 
 namespace NUnit.Framework.Internal.Commands
@@ -76,12 +78,31 @@ namespace NUnit.Framework.Internal.Commands
 
         private object RunTestMethod(TestExecutionContext context)
         {
+            if (DefaultSynchronizationContext != null)
+            {
+                return AsyncToSyncAdapter.Await(() => InvokeInSyncContext(context));
+            }
+
             if (AsyncToSyncAdapter.IsAsyncOperation(testMethod.Method.MethodInfo))
             {
                 return AsyncToSyncAdapter.Await(() => InvokeTestMethod(context));
             }
 
             return InvokeTestMethod(context);
+        }
+
+        private async Task<object> InvokeInSyncContext(TestExecutionContext context)
+        {
+            await DefaultSynchronizationContext;
+            if (AsyncToSyncAdapter.IsAsyncOperation(testMethod.Method.MethodInfo))
+            {
+                Task task = (Task)testMethod.Method.Invoke(context.TestObject, arguments);
+                await task.ConfigureAwait(false);
+                PropertyInfo resultProperty = task.GetType().GetProperty("Result");
+                return resultProperty.GetValue(task);
+            }
+
+            return testMethod.Method.Invoke(context.TestObject, arguments);
         }
 
         private object InvokeTestMethod(TestExecutionContext context)

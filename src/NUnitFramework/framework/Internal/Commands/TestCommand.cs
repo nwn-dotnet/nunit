@@ -21,6 +21,8 @@
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 // ***********************************************************************
 
+using System.Threading;
+
 namespace NUnit.Framework.Internal.Commands
 {
     /// <summary>
@@ -38,6 +40,11 @@ namespace NUnit.Framework.Internal.Commands
     /// </summary>
     public abstract class TestCommand
     {
+        /// <summary>
+        /// The context to use when executing test commands.
+        /// </summary>
+        public static SynchronizationContext DefaultSynchronizationContext { get; set; }
+
         /// <summary>
         /// Construct a TestCommand for a test.
         /// </summary>
