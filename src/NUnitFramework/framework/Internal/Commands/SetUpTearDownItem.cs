@@ -24,6 +24,7 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Threading.Tasks;
 using NUnit.Framework.Interfaces;
 using NUnit.Framework.Internal.Execution;
 
@@ -113,10 +114,25 @@ namespace NUnit.Framework.Internal.Commands
             Guard.ArgumentNotAsyncVoid(method.MethodInfo, nameof(method));
             _methodValidator?.Validate(method.MethodInfo);
 
-            if (AsyncToSyncAdapter.IsAsyncOperation(method.MethodInfo))
+            if (TestCommand.DefaultSynchronizationContext != null)
+                AsyncToSyncAdapter.Await(() => InvokeInSyncContext(method, context));
+            else if (AsyncToSyncAdapter.IsAsyncOperation(method.MethodInfo))
                 AsyncToSyncAdapter.Await(() => InvokeMethod(method, context));
             else
                 InvokeMethod(method, context);
+        }
+
+        private async Task<object> InvokeInSyncContext(IMethodInfo method, TestExecutionContext context)
+        {
+            await TestCommand.DefaultSynchronizationContext;
+            if (AsyncToSyncAdapter.IsAsyncOperation(method.MethodInfo))
+            {
+                Task task = (Task)InvokeMethod(method, context);
+                await task.ConfigureAwait(false);
+                return task.GetType().GetProperty(nameof(Task<object>.Result))?.GetValue(task);
+            }
+
+            return InvokeMethod(method, context);
         }
 
         private static object InvokeMethod(IMethodInfo method, TestExecutionContext context)

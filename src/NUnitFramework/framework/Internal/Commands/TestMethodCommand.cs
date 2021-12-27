@@ -96,13 +96,12 @@ namespace NUnit.Framework.Internal.Commands
             await DefaultSynchronizationContext;
             if (AsyncToSyncAdapter.IsAsyncOperation(testMethod.Method.MethodInfo))
             {
-                Task task = (Task)testMethod.Method.Invoke(context.TestObject, arguments);
+                Task task = (Task)InvokeTestMethod(context);
                 await task.ConfigureAwait(false);
-                PropertyInfo resultProperty = task.GetType().GetProperty("Result");
-                return resultProperty.GetValue(task);
+                return task.GetType().GetProperty(nameof(Task<object>.Result))?.GetValue(task);
             }
 
-            return testMethod.Method.Invoke(context.TestObject, arguments);
+            return InvokeTestMethod(context);
         }
 
         private object InvokeTestMethod(TestExecutionContext context)
